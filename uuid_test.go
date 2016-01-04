@@ -388,3 +388,58 @@ func TestBadRand(t *testing.T) {
 		t.Errorf("unexecpted duplicates, got %q\n", uuid1)
 	}
 }
+
+func TestVersion1WithTime(t *testing.T) {
+	epoch := 1451685453
+
+	uuid1 := NewUUIDWithTime(time.Unix(int64(epoch),0))
+	uuid2 := NewUUIDWithTime(time.Unix(int64(epoch),0))
+
+	if Equal(uuid1, uuid2) {
+		t.Errorf("%s:duplicate uuid\n", uuid1)
+	}
+	if v, _ := uuid1.Version(); v != 1 {
+		t.Errorf("%s: version %s expected 1\n", uuid1, v)
+	}
+	if v, _ := uuid2.Version(); v != 1 {
+		t.Errorf("%s: version %s expected 1\n", uuid2, v)
+	}
+	n1 := uuid1.NodeID()
+	n2 := uuid2.NodeID()
+	if !bytes.Equal(n1, n2) {
+		t.Errorf("Different nodes %x != %x\n", n1, n2)
+	}
+	t1, ok := uuid1.Time()
+	if !ok {
+		t.Errorf("%s: invalid time\n", uuid1)
+	}
+	t1s, _ := t1.UnixTime()
+	if t1s != int64(epoch) {
+		t.Errorf("%s: does not match epoch time", uuid1)
+	}
+	t2, ok := uuid2.Time()
+	if !ok {
+		t.Errorf("%s: invalid time\n", uuid2)
+	}
+	t2s, _ := t1.UnixTime()
+	if t2s != int64(epoch) {
+		t.Errorf("%s: does not match epoch time", uuid2)
+	}
+	q1, ok := uuid1.ClockSequence()
+	if !ok {
+		t.Errorf("%s: invalid clock sequence\n", uuid1)
+	}
+	q2, ok := uuid2.ClockSequence()
+	if !ok {
+		t.Errorf("%s: invalid clock sequence", uuid2)
+	}
+
+	switch {
+	case t1 == t2 && q1 == q2:
+		t.Errorf("time stopped\n")
+	case t1 > t2 && q1 == q2:
+		t.Errorf("time reversed\n")
+	case t1 < t2 && q1 != q2:
+		t.Errorf("clock sequence chaned unexpectedly\n")
+	}
+}

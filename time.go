@@ -48,6 +48,16 @@ func GetTime() (Time, uint16, error) {
 	return getTime()
 }
 
+func GetTimeWithTime(t time.Time) (Time, uint16, error) {
+	defer func(orig func() time.Time) { timeNow = orig }(timeNow)
+	defer mu.Unlock()
+	timeNow = func() time.Time {
+		return t
+	}
+	mu.Lock()
+	return getTime()
+}
+
 func getTime() (Time, uint16, error) {
 	t := timeNow()
 

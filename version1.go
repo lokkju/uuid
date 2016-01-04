@@ -6,6 +6,7 @@ package uuid
 
 import (
 	"encoding/binary"
+	"time"
 )
 
 // NewUUID returns a Version 1 UUID based on the current NodeID and clock
@@ -15,13 +16,24 @@ import (
 // SetClockSequence then it will be set automatically.  If GetTime fails to
 // return the current NewUUID returns nil.
 func NewUUID() UUID {
-	if nodeID == nil {
-		SetNodeInterface("")
-	}
-
 	now, seq, err := GetTime()
 	if err != nil {
 		return nil
+	}
+	return newUUID(now, seq)
+}
+
+func NewUUIDWithTime(t time.Time) UUID {
+	now, seq, err := GetTimeWithTime(t)
+	if err != nil {
+		return nil
+	}
+	return newUUID(now, seq)
+}
+
+func newUUID(now Time,seq uint16) UUID {
+	if nodeID == nil {
+		SetNodeInterface("")
 	}
 
 	uuid := make([]byte, 16)
